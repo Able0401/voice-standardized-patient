@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# secrets: never commit real keys or project ids
+.env*
+!.env.example
+.firebaserc
+
+# build output
+client/dist/
+dist/
+
+# logs
+*.log
+npm-debug.log*
+
+# os
+.DS_Store
+
+# firebase deploy cache
+.firebase/

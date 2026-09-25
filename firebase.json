@@ -1,0 +1,32 @@
+{
+  "functions": {
+    "source": "functions"
+  },
+  "hosting": {
+    "public": "client/dist",
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "function": {
+          "functionId": "demo",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "/index.html",
+        "headers": [
+          {
+            "key": "Permissions-Policy",
+            "value": "microphone=(self)"
+          }
+        ]
+      }
+    ]
+  }
+}

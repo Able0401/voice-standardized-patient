@@ -1,0 +1,15 @@
+{
+  "name": "voice-standardized-patient",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Voice AI standardized patient for clinical interview practice. Two speech pipelines, one page.",
+  "scripts": {
+    "install:all": "npm install && npm --prefix client install && npm --prefix functions install",
+    "dev": "concurrently -n api,web -c blue,green \"node --watch functions/dev.js\" \"npm --prefix client run dev\"",
+    "build": "npm --prefix client run build",
+    "deploy": "npm run build && firebase deploy --only hosting,functions"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

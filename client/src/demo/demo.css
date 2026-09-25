@@ -1,0 +1,229 @@
+/* Demo page. Uses the black-and-white line system from global.css and adds a single-column reading width. */
+
+.demo {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.demo-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.demo-tag {
+  font-size: 12px;
+  color: var(--fg-soft);
+  border: 1px solid var(--line-soft);
+  padding: 2px 8px;
+  margin-right: auto;
+}
+
+.demo-main {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 56px 24px 48px;
+  flex: 1;
+}
+
+.demo-title {
+  font-size: clamp(26px, 5vw, 34px);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  white-space: pre-line;
+  margin-bottom: 16px;
+}
+.demo-lede {
+  color: var(--fg-soft);
+  font-size: 16px;
+  line-height: 1.7;
+  margin: 0 0 32px;
+}
+
+/* Door note: styled like the sheet taped to an exam-room door */
+.door {
+  border: 1px solid var(--line);
+  padding: 20px 22px;
+  margin-bottom: 32px;
+}
+.door .label {
+  display: block;
+  margin-bottom: 10px;
+}
+.door p {
+  margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.door p:nth-child(3) {
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-soft);
+  font-size: 13px;
+}
+.door p:last-child {
+  margin: 12px 0 0;
+}
+
+.demo-start {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 15px;
+}
+.demo-error {
+  border-left: 2px solid var(--fg);
+  padding: 4px 0 4px 12px;
+  margin: 0 0 16px;
+  font-size: 14px;
+}
+.demo-notes {
+  margin: 28px 0 0;
+  padding: 0 0 0 18px;
+  color: var(--fg-soft);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* Interview screen */
+.demo-call {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 110px);
+  padding-top: 32px;
+}
+.call-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.call-status {
+  font-size: 14px;
+  margin-right: auto;
+}
+.call-timer {
+  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+  font-weight: 600;
+}
+.call-timer.low {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.pulse {
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--fg);
+  border-radius: 50%;
+}
+.pulse.on {
+  background: var(--fg);
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    transform: scale(1.35);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse.on {
+    animation: none;
+  }
+}
+
+.log {
+  flex: 1;
+  min-height: 240px;
+  overflow-y: auto;
+  padding: 20px 0;
+}
+.turn {
+  margin: 0 0 16px;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.turn .label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 10px;
+}
+.turn--user {
+  color: var(--fg-soft);
+}
+.demo-end {
+  width: 100%;
+}
+
+/* After the interview */
+.check {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  border-top: 1px solid var(--line-soft);
+}
+.check li {
+  border-bottom: 1px solid var(--line-soft);
+}
+.check label {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 11px 0;
+  font-size: 15px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.check input {
+  accent-color: var(--fg);
+  flex: none;
+  transform: translateY(1px);
+}
+.demo-transcript {
+  margin-bottom: 28px;
+}
+.demo-transcript summary {
+  cursor: pointer;
+  padding: 8px 0 16px;
+}
+
+.demo-foot {
+  text-align: center;
+  font-size: 12px;
+  padding: 20px 24px 28px;
+}
+
+@media (max-width: 480px) {
+  .demo-bar {
+    padding: 12px 16px;
+  }
+  .demo-main {
+    padding: 36px 16px 32px;
+  }
+}
+
+/* Engine caption: one line naming the active speech pipeline */
+.demo-engine {
+  margin: -0.6rem 0 1.2rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  opacity: 0.55;
+}
+
+/* Engine switch: two buttons, the active one filled. Switching reloads the page with ?engine=. */
+.engine-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 24px;
+}
+.engine-switch .label {
+  margin-right: auto;
+}
+.engine-switch .btn[aria-pressed='true'] {
+  cursor: default;
+}
