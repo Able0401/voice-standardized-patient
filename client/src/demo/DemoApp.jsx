@@ -41,11 +41,15 @@ const fmt = (ms) => {
 export default function DemoApp() {
   const [phase, setPhase] = useState('intro');
   const [status, setStatus] = useState('idle');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); // code from content.js `errors`
+  const [errorDetail, setErrorDetail] = useState(null); // the server's own words, e.g. the WebSocket close reason
+  const [dropped, setDropped] = useState(null); // close reason when the connection ended mid-interview
   const [speaking, setSpeaking] = useState(null);
   const [turns, setTurns] = useState([]);
   const [left, setLeft] = useState(MINUTES * 60 * 1000);
   const ctrl = useRef(null);
+  const seq = useRef(0); // start() attempt counter, so a session that resolves after End is stopped
+  const turnCount = useRef(0);
   const endAt = useRef(0);
   const logEl = useRef(null);
   const t = TEXT;
@@ -68,7 +72,8 @@ export default function DemoApp() {
   }, [turns, speaking]);
 
   // Insert by start time; merge with the previous entry when the same speaker continues.
-  const push = (who, text, at) =>
+  const push = (who, text, at) => {
+    turnCount.current += 1;
     setTurns((xs) => {
       const next = [...xs, { who, text, at }].sort((a, b) => a.at - b.at);
       return next.reduce((out, x) => {
@@ -78,32 +83,54 @@ export default function DemoApp() {
         return out;
       }, []);
     });
+  };
 
   async function start() {
+    const my = ++seq.current;
     setError(null);
+    setErrorDetail(null);
+    setDropped(null);
     setTurns([]);
+    turnCount.current = 0;
     setLeft(MINUTES * 60 * 1000);
     setPhase('call');
-    ctrl.current = await startSession({
-      onStatus: (st, code) => {
+    const session = await startSession({
+      onStatus: (st, code, detail) => {
+        if (my !== seq.current) return;
         setStatus(st);
         if (st === 'error') {
           setError(code);
+          setErrorDetail(detail || null);
           setPhase('intro');
         }
-        if (st === 'ended') finish();
+        if (st === 'ended') {
+          // The server closed the socket. Before any exchange that is a failed start, not a finished
+          // interview: show the reason on the intro screen instead of the checklist.
+          if (turnCount.current === 0) {
+            setError('network');
+            setErrorDetail(code || null);
+            setStatus('idle');
+            setPhase('intro');
+          } else {
+            finish(code || null);
+          }
+        }
       },
       onUserText: (x, at) => push('user', x, at),
       onAssistantText: (x, at) => push('patient', x, at),
       onSpeaking: setSpeaking,
     });
+    if (my !== seq.current) session.stop(); // the visitor pressed End (or the session ended) while connecting
+    else ctrl.current = session;
   }
 
-  function finish() {
+  function finish(reason = null) {
+    seq.current += 1;
     ctrl.current?.stop();
     ctrl.current = null;
     setStatus('idle');
     setSpeaking(null);
+    setDropped(reason);
     setPhase('done');
   }
 
@@ -145,7 +172,12 @@ export default function DemoApp() {
             ))}
           </div>
 
-          {error && <p className="demo-error">{t.errors[error] || t.errors.default}</p>}
+          {error && (
+            <p className="demo-error">
+              {t.errors[error] || t.errors.default}
+              {errorDetail && <span className="demo-error-detail">{errorDetail}</span>}
+            </p>
+          )}
 
           <button className="btn btn--solid demo-start" onClick={start}>
             {t.start}
@@ -183,7 +215,7 @@ export default function DemoApp() {
             ))}
           </div>
 
-          <button className="btn demo-end" onClick={finish}>
+          <button className="btn demo-end" onClick={() => finish()}>
             {t.end}
           </button>
         </main>
@@ -192,6 +224,12 @@ export default function DemoApp() {
       {phase === 'done' && (
         <main className="demo-main">
           <h2>{t.doneTitle}</h2>
+          {dropped && (
+            <p className="demo-error">
+              {t.errors.network}
+              <span className="demo-error-detail">{dropped}</span>
+            </p>
+          )}
           <p className="demo-lede">{t.doneLede}</p>
           <ul className="check">
             {t.checklist.map((c) => (

@@ -171,11 +171,23 @@ export async function openLiveAudio({ getToken, resumable = false, onMessage, on
 
   // ----- connection -----
   let gen = 0; // generation counter so events from a discarded connection are ignored
+
+  // "1011 Your prepayment credits are depleted. ..." — the code and the server's text together.
+  const describeClose = (e) => [e?.code ?? '?', e?.reason].filter(Boolean).join(' ');
+
   async function connect() {
     const { token, model } = await getToken(handle);
     const ai = new GoogleGenAI({ apiKey: token, httpOptions: { apiVersion: 'v1alpha' } });
     const my = ++gen;
-    session = await ai.live.connect({
+    let ready = false;
+    // The SDK resolves connect() only after setupComplete. If the server closes the socket before
+    // that (billing, bad token, model not found) the promise never settles, so race it against
+    // the close event and report the server's close reason as the error.
+    let rejectEarly = () => {};
+    const closedEarly = new Promise((_, reject) => {
+      rejectEarly = reject;
+    });
+    const connecting = ai.live.connect({
       model,
       // The config is fully locked in the token; the values given here are ignored.
       config: { responseModalities: ['AUDIO'] },
@@ -198,12 +210,37 @@ export async function openLiveAudio({ getToken, resumable = false, onMessage, on
         },
         onerror: (e) => console.warn('[gemini-live] ws error:', e?.message || e),
         onclose: (e) => {
-          if (stopped || my !== gen) return;
-          if (resumable && handle && reconnects < MAX_RECONNECTS) reconnect();
-          else onClosed(e?.reason || `code ${e?.code ?? '?'}`);
+          if (my !== gen) return;
+          const reason = describeClose(e);
+          if (!ready) {
+            rejectEarly(Object.assign(new Error(reason), { code: 'connect', closeCode: e?.code, reason: e?.reason }));
+            return;
+          }
+          if (stopped) return;
+          console.warn('[gemini-live] closed:', reason);
+          if (resumable && handle && reconnects < MAX_RECONNECTS) {
+            reconnect();
+            return;
+          }
+          stop(); // release the microphone and the audio contexts even if the caller has no handle yet
+          onClosed(reason);
         },
       },
     });
+    let timer = null;
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(Object.assign(new Error('setup timeout'), { code: 'connect', reason: 'no setupComplete within 20 s' })), 20_000);
+    });
+    try {
+      session = await Promise.race([connecting, closedEarly, timeout]);
+      ready = true;
+    } catch (err) {
+      gen += 1; // events from this attempt are ignored from here on
+      connecting.then((s) => s.close()).catch(() => {}); // if it settles late, do not leave a socket open
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   let reconnecting = false;

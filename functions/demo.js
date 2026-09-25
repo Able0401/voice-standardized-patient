@@ -77,14 +77,15 @@ export function createDemoApp({ takeQuota }) {
     const lang = askedLang(req);
     try {
       // The whole config is locked in the token; the client setup is ignored. No reconnect: the
-      // session is short. Refusing the microphone still counts as one use, because the token is
-      // minted first.
+      // session is short. The client opens the microphone before asking for the token, so the token
+      // is used within about a second of being minted. Minting succeeds even when the project's
+      // credits are exhausted; that failure only shows up as the WebSocket close reason.
       const token = await mintLiveToken({
         apiKey,
         model: liveModel(),
         config: liveConfig({ instructions: demoCase(lang).instructions, voice: demoCase(lang).voice, lang }),
         expireMin: 10,
-        newSessionMin: 5, // the microphone prompt appears after the token is minted; give a slow visitor time
+        newSessionMin: 5,
       });
       return res.json({ token, model: liveModel() });
     } catch (err) {

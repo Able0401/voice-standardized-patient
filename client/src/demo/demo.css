@@ -206,6 +206,15 @@
   }
 }
 
+/* The server's own words for a failure (WebSocket close reason), under the plain message */
+.demo-error-detail {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  opacity: 0.7;
+  overflow-wrap: anywhere;
+}
+
 /* Engine caption: one line naming the active speech pipeline */
 .demo-engine {
   margin: -0.6rem 0 1.2rem;

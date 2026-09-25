@@ -52,6 +52,8 @@ export const TEXT = {
   errors: {
     mic: 'Microphone unavailable. Allow microphone access in the address bar.',
     quota: 'The demo limit for today has been reached. Please try again tomorrow.',
+    budget: 'The demo’s API budget is used up. Please try again later.',
+    connect: 'The patient could not be reached.',
     network: 'The connection dropped.',
     default: 'Could not connect. Please try again shortly.',
   },
