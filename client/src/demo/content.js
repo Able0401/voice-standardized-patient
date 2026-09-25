@@ -13,11 +13,6 @@ export const TEXT = {
     'Vitals: BP 118/74 mmHg · HR 88/min · RR 16/min · Temp 36.6 °C',
     `Take her history, then discuss your working diagnosis and plan with her. (${MINUTES} min)`,
   ],
-  engineLabel: 'Speech pipeline',
-  engines: {
-    live: { name: 'Live', caption: 'Voice: single speech-to-speech model' },
-    tts: { name: 'Cascade', caption: 'Voice: transcription + text model + TTS' },
-  },
   notes: [
     'Needs microphone access. Works best in a quiet room with earphones.',
     'Nothing is stored. Audio is sent to the Google Gemini API to generate the replies.',

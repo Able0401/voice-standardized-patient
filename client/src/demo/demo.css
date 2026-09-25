@@ -214,25 +214,3 @@
   opacity: 0.7;
   overflow-wrap: anywhere;
 }
-
-/* Engine caption: one line naming the active speech pipeline */
-.demo-engine {
-  margin: -0.6rem 0 1.2rem;
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
-  opacity: 0.55;
-}
-
-/* Engine switch: two buttons, the active one filled. Switching reloads the page with ?engine=. */
-.engine-switch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 24px;
-}
-.engine-switch .label {
-  margin-right: auto;
-}
-.engine-switch .btn[aria-pressed='true'] {
-  cursor: default;
-}

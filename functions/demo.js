@@ -1,4 +1,4 @@
-// HTTP routes for the demo. One Express app serves both pipelines.
+// HTTP routes for the demo. One Express app, one route: the session token.
 //
 // - The case sheet and the voice are chosen here (demoCase.js) and locked into a Gemini Live
 //   ephemeral token. The client sends nothing but `lang` and receives a token.
@@ -9,8 +9,7 @@
 
 import express from 'express';
 import { demoCase } from './demoCase.js';
-import { LIVE_MODEL_DEFAULT, geminiVoice, liveConfig, mintLiveToken } from './gemini.js';
-import { BRAIN_MODEL_DEFAULT, STT_MODEL_DEFAULT, TTS_MODEL_DEFAULT, patientTurn, streamTts } from './tts.js';
+import { LIVE_MODEL_DEFAULT, liveConfig, mintLiveToken } from './gemini.js';
 
 const DEMO_PER_IP = Number(process.env.DEMO_PER_IP || 3);
 const DEMO_PER_DAY = Number(process.env.DEMO_PER_DAY || 30);
@@ -28,9 +27,6 @@ const clientIp = (req) =>
   String(req.headers['x-forwarded-for'] || req.ip || 'unknown').split(',')[0].trim();
 
 const liveModel = () => process.env.GEMINI_LIVE_MODEL || LIVE_MODEL_DEFAULT;
-const sttModel = () => process.env.GEMINI_STT_MODEL || STT_MODEL_DEFAULT;
-const brainModel = () => process.env.GEMINI_BRAIN_MODEL || BRAIN_MODEL_DEFAULT;
-const ttsModel = () => process.env.GEMINI_TTS_MODEL || TTS_MODEL_DEFAULT;
 
 /**
  * @param {object} deps
@@ -40,7 +36,7 @@ export function createDemoApp({ takeQuota }) {
   const app = express();
   app.use(express.json({ limit: '64kb' }));
 
-  // Origin check and key lookup shared by every route. Returns the API key or null after replying.
+  // Origin check and key lookup. Returns the API key or null after replying.
   const guard = (req, res) => {
     const origin = req.headers.origin;
     if (origin && !ALLOWED_ORIGINS.includes(origin)) {
@@ -69,7 +65,7 @@ export function createDemoApp({ takeQuota }) {
     return allowed;
   };
 
-  // ----- live pipeline: one token, the model listens and speaks -----
+  // One token per session; the model listens and speaks.
   app.post('/api/demo/session', async (req, res) => {
     const apiKey = guard(req, res);
     if (!apiKey) return;
@@ -91,81 +87,6 @@ export function createDemoApp({ takeQuota }) {
     } catch (err) {
       console.error('demo token failed:', err);
       return res.status(502).json({ error: 'upstream' });
-    }
-  });
-
-  // ----- cascade pipeline: transcription token, then one turn and one TTS call per utterance -----
-  // Same case sheet, same voice, same screen. The client sends only `lang` and the history.
-
-  // Session start = transcription token. Quota is counted here (the cascade's equivalent of /api/demo/session).
-  app.post('/api/demo/stt', async (req, res) => {
-    const apiKey = guard(req, res);
-    if (!apiKey) return;
-    if (!(await takeOrReject(req, res))) return;
-    try {
-      const token = await mintLiveToken({
-        apiKey,
-        model: sttModel(),
-        config: {
-          responseModalities: ['TEXT'],
-          inputAudioTranscription: { languageCodes: [askedLang(req)] },
-          realtimeInputConfig: {
-            // Same 2.5 s end-of-turn silence as the live pipeline. This is the largest single piece
-            // of the cascade's latency, and shortening it cuts off visitors who pause to think.
-            automaticActivityDetection: { silenceDurationMs: 2500, endOfSpeechSensitivity: 'END_SENSITIVITY_LOW' },
-          },
-        },
-        expireMin: 10,
-        newSessionMin: 5,
-      });
-      return res.json({ token, model: sttModel() });
-    } catch (err) {
-      console.error('demo STT token failed:', err);
-      return res.status(502).json({ error: 'upstream' });
-    }
-  });
-
-  app.post('/api/demo/turn', async (req, res) => {
-    const apiKey = guard(req, res);
-    if (!apiKey) return;
-    const lang = askedLang(req);
-    const history = Array.isArray(req.body?.history) ? req.body.history.slice(-20) : [];
-    if (history.some((m) => typeof m?.text !== 'string' || m.text.length > 2000)) return res.status(400).json({ error: 'history' });
-    try {
-      const turn = await patientTurn({
-        apiKey,
-        model: brainModel(),
-        instructions: demoCase(lang).instructions, // the case sheet exists only on the server
-        history,
-        lang,
-      });
-      return res.json(turn);
-    } catch (err) {
-      console.error('demo patient turn failed:', err);
-      return res.status(502).json({ error: 'upstream' });
-    }
-  });
-
-  app.post('/api/demo/tts', async (req, res) => {
-    const apiKey = guard(req, res);
-    if (!apiKey) return;
-    const { text, style } = req.body || {};
-    if (typeof text !== 'string' || !text || text.length > 1000) return res.status(400).json({ error: 'text' });
-    res.set({ 'Content-Type': 'audio/l16; rate=24000', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' });
-    try {
-      await streamTts({
-        apiKey,
-        model: ttsModel(),
-        text,
-        style: typeof style === 'string' ? style.slice(0, 200) : '',
-        voice: geminiVoice(demoCase(askedLang(req)).voice),
-        onChunk: (b) => res.write(b),
-      });
-      return res.end();
-    } catch (err) {
-      console.error('demo TTS failed:', err);
-      if (!res.headersSent) return res.status(502).json({ error: 'upstream' });
-      return res.end();
     }
   });
 

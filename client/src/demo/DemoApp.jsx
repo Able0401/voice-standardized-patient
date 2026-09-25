@@ -1,36 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { startDemoSession } from './live';
-import { startTtsSession } from '../lib/ttsVoice';
 import { MINUTES, TEXT } from './content';
 
-// Both the engine and the language are chosen from the query string at load time:
-//   ?engine=live|tts (default live)   ?lang=en|ko (default en)
-// Switching either one reloads the page, so a session never changes pipeline mid-way.
-const QUERY = new URLSearchParams(window.location.search);
-const ENGINE = QUERY.get('engine') === 'tts' ? 'tts' : 'live';
-const LANG = QUERY.get('lang') === 'ko' ? 'ko' : 'en';
-
-function switchEngine(engine) {
-  const q = new URLSearchParams(window.location.search);
-  q.set('engine', engine);
-  window.location.assign(`${window.location.pathname}?${q.toString()}`);
-}
-
-// The cascade session reports 'connected' and free-form error text; the screen expects 'live' and an
-// error code. This adapter maps one to the other.
-const toDemoStatus = (onStatus) => (st, detail) => {
-  if (st === 'connected') return onStatus('live');
-  if (st !== 'error') return onStatus(st, detail);
-  const d = String(detail || '');
-  if (/quota|429/i.test(d)) return onStatus('error', 'quota');
-  if (/NotAllowed|NotFound|permission|mic/i.test(d)) return onStatus('error', 'mic');
-  return onStatus('error', 'session');
-};
-
-const startSession = ({ onStatus, ...o }) =>
-  ENGINE === 'tts'
-    ? startTtsSession({ ...o, onStatus: toDemoStatus(onStatus), lang: LANG })
-    : startDemoSession({ ...o, onStatus, lang: LANG });
+// The language is read from the query string at load time: ?lang=en|ko (default en).
+const LANG = new URLSearchParams(window.location.search).get('lang') === 'ko' ? 'ko' : 'en';
 
 const fmt = (ms) => {
   const s = Math.max(0, Math.ceil(ms / 1000));
@@ -94,7 +67,8 @@ export default function DemoApp() {
     turnCount.current = 0;
     setLeft(MINUTES * 60 * 1000);
     setPhase('call');
-    const session = await startSession({
+    const session = await startDemoSession({
+      lang: LANG,
       onStatus: (st, code, detail) => {
         if (my !== seq.current) return;
         setStatus(st);
@@ -144,10 +118,6 @@ export default function DemoApp() {
       {phase === 'intro' && (
         <main className="demo-main">
           <h1 className="demo-title">{t.title}</h1>
-          <p className="demo-engine">
-            {t.engines[ENGINE].caption}
-            {LANG === 'ko' ? ' · 한국어' : ''}
-          </p>
           <p className="demo-lede">{t.lede}</p>
 
           <section className="door">
@@ -156,21 +126,6 @@ export default function DemoApp() {
               <p key={line}>{line}</p>
             ))}
           </section>
-
-          <div className="engine-switch" role="group" aria-label={t.engineLabel}>
-            <span className="label">{t.engineLabel}</span>
-            {['live', 'tts'].map((e) => (
-              <button
-                key={e}
-                type="button"
-                className={`btn btn--sm ${ENGINE === e ? 'btn--solid' : ''}`}
-                aria-pressed={ENGINE === e}
-                onClick={() => ENGINE !== e && switchEngine(e)}
-              >
-                {t.engines[e].name}
-              </button>
-            ))}
-          </div>
 
           {error && (
             <p className="demo-error">
