@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Voice Standardized Patient: one session",
+    "viewBox": [
+      1000,
+      440
+    ],
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "components": [
+    {
+      "id": "page",
+      "type": "frontend",
+      "label": "Demo page",
+      "sublabel": "no API key, no script",
+      "pos": [
+        40,
+        80
+      ],
+      "size": [
+        190,
+        72
+      ]
+    },
+    {
+      "id": "mic",
+      "type": "frontend",
+      "label": "Audio",
+      "sublabel": "mic \u2192 16 kHz, plays 24 kHz",
+      "pos": [
+        40,
+        300
+      ],
+      "size": [
+        190,
+        90
+      ]
+    },
+    {
+      "id": "fn",
+      "type": "backend",
+      "label": "demo function",
+      "sublabel": "holds API key + patient script",
+      "pos": [
+        395,
+        80
+      ],
+      "size": [
+        210,
+        72
+      ]
+    },
+    {
+      "id": "quota",
+      "type": "database",
+      "label": "Firestore",
+      "sublabel": "quota: 1 counter doc per day",
+      "pos": [
+        395,
+        220
+      ],
+      "size": [
+        210,
+        64
+      ]
+    },
+    {
+      "id": "tokens",
+      "type": "security",
+      "label": "Ephemeral tokens",
+      "sublabel": "single use, expires in 10 min",
+      "pos": [
+        770,
+        80
+      ],
+      "size": [
+        190,
+        72
+      ]
+    },
+    {
+      "id": "live",
+      "type": "cloud",
+      "label": "Gemini Live",
+      "sublabel": "plays the patient",
+      "pos": [
+        770,
+        300
+      ],
+      "size": [
+        190,
+        90
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Visitor's browser",
+      "wraps": [
+        "page",
+        "mic"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Author's Firebase project",
+      "wraps": [
+        "fn",
+        "quota"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Google",
+      "wraps": [
+        "tokens",
+        "live"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ask",
+      "from": "page",
+      "to": "fn",
+      "label": "1 POST session {lang}",
+      "variant": "emphasis"
+    },
+    {
+      "id": "count",
+      "from": "fn",
+      "to": "quota",
+      "label": "2 count +1",
+      "labelAt": [
+        500,
+        186
+      ]
+    },
+    {
+      "id": "mint",
+      "from": "fn",
+      "to": "tokens",
+      "label": "3 mint: script, voice, VAD",
+      "variant": "security"
+    },
+    {
+      "id": "token",
+      "from": "fn",
+      "to": "page",
+      "label": "4 token only",
+      "variant": "dashed",
+      "labelDy": 18
+    },
+    {
+      "id": "lock",
+      "from": "tokens",
+      "to": "live",
+      "label": "config locked in",
+      "variant": "security",
+      "labelAt": [
+        865,
+        226
+      ]
+    },
+    {
+      "id": "up",
+      "from": "mic",
+      "to": "live",
+      "label": "5 WebSocket with token: 16 kHz voice",
+      "variant": "emphasis",
+      "labelDy": 16
+    },
+    {
+      "id": "down",
+      "from": "live",
+      "to": "mic",
+      "label": "24 kHz voice, transcripts",
+      "variant": "dashed",
+      "labelDy": 0
+    }
+  ]
+}

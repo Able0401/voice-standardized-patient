@@ -13,11 +13,11 @@ This page puts one such patient in a browser tab. You press start, speak, and th
 ## How it works
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/how-it-works-dark.png">
-  <img alt="Sequence of a session. Step 1: the browser asks the demo server for a session and receives a single-use ticket with the patient script sealed inside. Step 2: the browser connects to Gemini Live with the ticket, and the student's voice and the patient's voice go back and forth between the browser and Gemini; the demo server takes no part." src="docs/how-it-works-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
+  <img alt="Architecture of one session. Three areas: the visitor's browser (demo page and audio), the author's Firebase project (demo function holding the API key and patient script, Firestore quota counter), and Google (ephemeral token service and Gemini Live). Step 1 the page posts a session request to the demo function; 2 the function counts it in Firestore; 3 it mints an ephemeral token with the script, voice and turn detection locked in; 4 only the token goes back to the page; 5 the browser's audio connects to Gemini Live over a WebSocket with the token, sending 16 kHz voice and receiving 24 kHz voice and transcripts." src="docs/architecture-light.png">
 </picture>
 
-A session has two steps. First the page asks the demo server for a session. The server holds the API key and the patient's script. It checks where the request came from, seals the script, the voice and the model into a single-use ticket, and returns the ticket. Then the browser connects to Gemini Live with that ticket and the interview runs between the two. The server takes no further part.
+The numbers follow one session. The page asks the demo function for a session (1). The function checks where the request came from and counts it against the daily limit in Firestore (2). It then asks Google for an ephemeral token and locks the patient script, the voice and the turn-detection settings into it (3). Only the token goes back to the page (4). The browser opens a WebSocket to Gemini Live with that token and streams the microphone at 16 kHz; the patient's voice comes back at 24 kHz with transcripts of both sides (5). The token works once and expires in 10 minutes. After step 4 the demo function takes no further part.
 
 Gemini decides when the student has finished a question. It waits for 2.5 s of silence, so a student who pauses to think is not cut off. The first patient audio arrives 2.9–3.1 s after the student stops speaking (author's measurement, 2026-09, synthesized speech input); most of that is the deliberate wait.
 
@@ -62,7 +62,7 @@ functions/dev.js              local server with in-memory quota
 functions/demo.js             the session route, origin check, quota
 functions/demoCase.js         the fictional patient (English and Korean sheets)
 functions/gemini.js           Live config and token minting
-docs/how-it-works.*           the figure; the .json is the source (rendered with archify)
+docs/architecture.*           the figure; the .json is the source (rendered with archify)
 ```
 
 ## Models
