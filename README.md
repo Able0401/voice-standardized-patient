@@ -14,12 +14,14 @@ This page puts one such patient in a browser tab. You press start, speak, and th
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
-  <img alt="Architecture of one session. Three areas: the visitor's browser (demo page and audio), the author's Firebase project (demo function holding the API key and patient script, Firestore quota counter), and Google (ephemeral token service and Gemini Live). Step 1 the page posts a session request to the demo function; 2 the function counts it in Firestore; 3 it mints an ephemeral token with the script, voice and turn detection locked in; 4 only the token goes back to the page; 5 the browser's audio connects to Gemini Live over a WebSocket with the token, sending 16 kHz voice and receiving 24 kHz voice and transcripts." src="docs/architecture-light.png">
+  <img alt="Architecture of one session. The student's browser asks the session server for a session (1). The server seals the case sheet, including facts the patient reveals only when asked, into a one-time token with Google (2), and returns only the token (3). The browser then holds a spoken interview directly with Gemini Live, which plays the patient (4); the session server is no longer involved. Example exchange: the student asks whether she drinks anything to help her sleep, and the patient admits to a glass or two of wine." src="docs/architecture-light.png">
 </picture>
 
-The numbers follow one session. The page asks the demo function for a session (1). The function checks where the request came from and counts it against the daily limit in Firestore (2). It then asks Google for an ephemeral token and locks the patient script, the voice and the turn-detection settings into it (3). Only the token goes back to the page (4). The browser opens a WebSocket to Gemini Live with that token and streams the microphone at 16 kHz; the patient's voice comes back at 24 kHz with transcripts of both sides (5). The token works once and expires in 10 minutes. After step 4 the demo function takes no further part.
+The numbers follow one session. The page asks the session server for a session (1). The server holds the API key and the case sheet. It checks that the request comes from the demo's site and is within the daily limit, then seals the case sheet, the voice and the turn-taking rules into a one-time token at Google (2). Only the token goes back to the page (3). The browser opens a connection to Gemini Live with that token, and the interview runs between the two (4). The token works once and expires after 10 minutes.
 
-Gemini decides when the student has finished a question. It waits for 2.5 s of silence, so a student who pauses to think is not cut off. The first patient audio arrives 2.9–3.1 s after the student stops speaking (author's measurement, 2026-09, synthesized speech input); most of that is the deliberate wait.
+The example in the figure is the kind of fact the case sheet marks "only if asked": the patient drinks wine to fall asleep but will not say so unless the student asks.
+
+Gemini decides when the student has finished a question. It waits for 2.5 s of silence, so a student who pauses to think is not cut off. The first patient audio arrives 2.9–3.1 s after the student stops speaking (measured in 2026-09 with synthesized speech as input); most of that is the deliberate wait.
 
 ## What the design gives you
 
@@ -62,7 +64,7 @@ functions/dev.js              local server with in-memory quota
 functions/demo.js             the session route, origin check, quota
 functions/demoCase.js         the fictional patient (English and Korean sheets)
 functions/gemini.js           Live config and token minting
-docs/architecture.*           the figure; the .json is the source (rendered with archify)
+docs/architecture.*           the figure; architecture.html is the source (SVG, light and dark)
 ```
 
 ## Models
