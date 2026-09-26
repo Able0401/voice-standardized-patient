@@ -14,12 +14,12 @@ This page puts one such patient in a browser tab. You press start, speak, and th
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
-  <img alt="Architecture of one session. The student's browser asks the session server for a session (1). The server seals the case sheet, including facts the patient reveals only when asked, into a one-time token with Google (2), and returns only the token (3). The browser then holds a spoken interview directly with Gemini Live, which plays the patient (4); the session server is no longer involved. Example exchange: the student asks whether she drinks anything to help her sleep, and the patient admits to a glass or two of wine." src="docs/architecture-light.png">
+  <img alt="Architecture. The student speaks; the browser streams the microphone to the Gemini Live API over one live connection and plays back the patient's voice and transcripts. At the start of the session the session server assembles a fixed prompt: a role section that keeps the model in the patient's part, the case sheet (with facts marked only if asked, such as wine before bed), and a rule for voice conversation, plus settings for the voice, turn detection and transcription. Gemini Live, a single speech-to-speech model, listens, decides when the question has ended, answers as the patient in speech, and transcribes both sides. Example exchange: the student asks whether she drinks anything to help her sleep; the patient admits to a glass or two of wine." src="docs/architecture-light.png">
 </picture>
 
-The numbers follow one session. The page asks the session server for a session (1). The server holds the API key and the case sheet. It checks that the request comes from the demo's site and is within the daily limit, then seals the case sheet, the voice and the turn-taking rules into a one-time token at Google (2). Only the token goes back to the page (3). The browser opens a connection to Gemini Live with that token, and the interview runs between the two (4). The token works once and expires after 10 minutes.
+The student speaks and the browser streams the microphone to the Gemini Live API over one live connection. Gemini Live is a single speech-to-speech model: it listens, decides when the question has ended, answers as the patient in speech, and writes down what each side said. There is no separate speech-to-text or text-to-speech step. The browser plays the answer, shows the transcript, and cuts playback if the student talks over the patient.
 
-The example in the figure is the kind of fact the case sheet marks "only if asked": the patient drinks wine to fall asleep but will not say so unless the student asks.
+What the model knows comes from one prompt, fixed for the session. It has three parts: a role section that keeps the model in the patient's part ("Only answer, as the patient, when the doctor asks."), the case sheet, and a rule for voice conversation. Some facts in the case sheet are marked "only if asked", such as the wine in the example, and the patient keeps them back until the student asks. The session server assembles this prompt once, at the start, and hands it to Google inside a one-time token; after that it takes no part in the conversation.
 
 Gemini decides when the student has finished a question. It waits for 2.5 s of silence, so a student who pauses to think is not cut off. The first patient audio arrives 2.9–3.1 s after the student stops speaking (measured in 2026-09 with synthesized speech as input); most of that is the deliberate wait.
 
@@ -27,7 +27,6 @@ Gemini decides when the student has finished a question. It waits for 2.5 s of s
 
 - The student cannot read the answers. Because the patient only reveals what is asked, the script works as an answer key. It stays on the server and inside the sealed ticket. The browser can neither read it nor replace it with its own instructions.
 - Nothing is recorded. Audio goes from the browser to Google, and the demo server never receives it. The transcript lives in the page and is gone on reload.
-- The link stays up. The server only answers requests from the demo's own site and gives each visitor a few sessions a day, so a stranger cannot use up the API budget.
 
 ## Run locally
 
