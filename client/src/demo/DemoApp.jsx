@@ -134,6 +134,7 @@ export default function DemoApp() {
         <main className="demo-main">
           <h1 className="demo-title">{t.title}</h1>
           <p className="demo-lede">{t.lede}</p>
+          <p className="demo-compare">{t.compare}</p>
 
           <fieldset className="acts">
             <legend className="label">{t.portrayalLabel}</legend>

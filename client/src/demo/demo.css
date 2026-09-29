@@ -274,3 +274,13 @@
   letter-spacing: 0.02em;
   opacity: 0.55;
 }
+
+/* How the two portrayals differ, one step smaller than the lede */
+.demo-compare {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--fg-soft);
+  margin: -16px 0 32px;
+  padding-left: 12px;
+  border-left: 2px solid var(--line-soft);
+}

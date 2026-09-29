@@ -8,6 +8,8 @@ export const TEXT = {
   tag: 'Demo',
   title: 'Practice psychiatric history taking\nwith an AI patient',
   lede: 'A demo for practicing psychiatric patient interviews on your own. Ask questions through your microphone and the patient responds by voice.',
+  compare:
+    'The same patient is portrayed in two ways. The assessment standardized patient portrays the case as faithfully as possible, as in an exam. The teaching patient portrays it to support learning, so what she discloses depends on how the student asks. Both share the case, the model, and the voice; only the portrayal instructions differ. This research asks whether the teaching portrayal helps students learn history taking.',
   doorLabel: 'Door note',
   door: [
     'Jieun Kim, 31, female, presents with trouble sleeping.',
