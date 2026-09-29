@@ -18,7 +18,7 @@ This prototype has a voice agent play the patient instead. The demo has one synt
 The same patient can be played two ways, and the visitor picks one before the interview:
 
 - **Assessment standardized patient.** Portrays the case as accurately as possible and brings things up on her own when a real patient would.
-- **Teaching patient.** Answers only what is asked, answers in the end when the student asks about the same topic two or three times, and opens up more after empathy or open questions.
+- **Teaching patient.** A practice partner. Answers what is asked, gives in when the student comes back to a topic two or three times, and says more after empathy or open questions.
 
 Everything else is identical: case sheet, models, voice, and per-turn rules. Only one block of the prompt changes (`functions/portrayals.js`).
 
