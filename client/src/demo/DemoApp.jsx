@@ -141,7 +141,7 @@ export default function DemoApp() {
               <label key={p} className={`act ${portrayal === p ? 'act--on' : ''}`}>
                 <input type="radio" name="portrayal" value={p} checked={portrayal === p} onChange={() => setPortrayal(p)} />
                 <span className="act-name">{t.portrayals[p].name}</span>
-                <span className="act-desc">{t.portrayals[p].desc}</span>
+                {t.portrayals[p].desc && <span className="act-desc">{t.portrayals[p].desc}</span>}
               </label>
             ))}
           </fieldset>
