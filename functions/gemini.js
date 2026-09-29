@@ -1,54 +1,13 @@
-// Gemini Live session config and ephemeral token minting.
+// Ephemeral token minting for the transcription session.
 //
-// The browser connects to the Gemini Live WebSocket directly. The server only mints a token with the
-// API key and locks the session config into that token, so the client cannot change the
-// instructions, the model, or the voice.
+// The browser streams microphone audio straight to a transcription-only Gemini Live session. The server
+// mints a token with the API key and locks the session config into it, so the client cannot change
+// the model or turn the session into anything but transcription.
 
 import { GoogleGenAI } from '@google/genai';
 
-export const LIVE_MODEL_DEFAULT = 'gemini-3.8-live';
-
 // Prebuilt Gemini voice name. The case sheet names the voice directly.
 export const geminiVoice = (voice) => voice || 'Kore';
-
-// Only what VAD and transcription cannot do goes into the instructions.
-const voiceRules = (lang) =>
-  (lang === 'en'
-    ? [
-        '[VOICE CONVERSATION RULES]',
-        '- Keep listening while the student pauses to think. Do not treat a cough, noise, or nearby talk as a new question.',
-      ]
-    : [
-        '[음성 대화 규칙]',
-        '- 학생이 말하다 멈추고 생각해도 끝까지 기다린다. 기침·잡음·주변 말소리는 새 질문으로 취급하지 않는다.',
-      ]
-  ).join('\n');
-
-/**
- * Live session config (@google/genai LiveConnectConfig).
- * With `resumable`, sessionResumption is enabled. On reconnect the server mints a new token that
- * carries the handle, because the token locks the full config and the client setup is ignored.
- * @param {{instructions:string, voice?:string, lang?:'ko'|'en', resumable?:boolean, handle?:string}} o
- */
-export function liveConfig({ instructions, voice, lang, resumable = false, handle = null }) {
-  const code = lang === 'en' ? 'en' : 'ko';
-  return {
-    responseModalities: ['AUDIO'],
-    systemInstruction: [instructions, voiceRules(code)].join('\n\n'),
-    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: geminiVoice(voice) } } },
-    realtimeInputConfig: {
-      automaticActivityDetection: {
-        // 2.5 s of silence before the turn ends, so a visitor who pauses mid-sentence is not cut off.
-        silenceDurationMs: 2500,
-        endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
-      },
-    },
-    // Transcription stays in the default VERBATIM mode; SMART mode removes hesitations from the transcript.
-    inputAudioTranscription: { languageCodes: [code] },
-    outputAudioTranscription: {},
-    ...(resumable ? { sessionResumption: handle ? { handle } : {} } : {}),
-  };
-}
 
 /**
  * Single-use ephemeral token with the whole config locked. The client's own setup is ignored.

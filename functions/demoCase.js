@@ -1,8 +1,8 @@
 // A fictional patient written for this demo. Not derived from any clinical or teaching material.
 //
-// The instructions are assembled on the server only and locked into the Live token. Accepting
-// arbitrary instructions from a public URL would turn the API key into a general Gemini Live proxy.
-// The voice-conversation rules are appended by gemini.js.
+// The instructions are assembled on the server only (demo.js adds the portrayal). Accepting
+// arbitrary instructions from a public URL would turn the API key into a general Gemini proxy.
+// The per-turn speaking rules are appended by tts.js.
 
 const PATIENT_EN = `[MOST IMPORTANT — ROLE LOCK]
 You are the PATIENT in this simulation. You are NOT a doctor, interviewer, counselor, or AI assistant.

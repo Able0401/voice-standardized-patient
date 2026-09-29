@@ -1,12 +1,13 @@
 // Screen text (English). The patient is a fictional case written for this demo; the same person is
-// defined in functions/demoCase.js. The patient's instructions are not here. Only the server has them.
+// defined in functions/demoCase.js. The patient's instructions and the portrayal texts are not here;
+// only the server has them. This file names the two portrayals and describes each in a sentence.
 
 export const MINUTES = 8;
 
 export const TEXT = {
   tag: 'Demo',
   title: 'Practice a clinical interview\nwith a voice AI patient',
-  lede: 'Medical students rehearse patient interviews with trained actors playing standardized patients. This page puts a voice agent in the actor’s place. Talk into your microphone and the patient answers out loud.',
+  lede: 'Medical students rehearse patient interviews with trained actors playing standardized patients. This page puts a voice agent in the actor’s place. Talk into your microphone and the patient answers out loud. The same patient can be played two ways; try both and compare.',
   doorLabel: 'Door note',
   door: [
     'Jieun Kim, a 31-year-old woman, comes in saying she cannot sleep well.',
@@ -16,9 +17,21 @@ export const TEXT = {
   notes: [
     'Needs microphone access. Works best in a quiet room with earphones.',
     'Nothing is stored. Audio is sent to the Google Gemini API to generate the replies.',
-    'Public demo: up to 3 sessions per person per day.',
+    'Public demo: up to 10 sessions per person per day.',
     'Simulated patient. Not medical care or advice.',
   ],
+  portrayalLabel: 'Portrayal',
+  portrayals: {
+    assessment: {
+      name: 'Assessment standardized patient',
+      desc: 'Plays the patient as accurately as possible, like a standardized patient in an exam. Brings things up on her own when a real patient would.',
+    },
+    teaching: {
+      name: 'Teaching patient',
+      desc: 'Plays the patient to help you learn. Answers what you ask, opens up after a second or third try on the same topic, and says more when you show empathy or ask open questions.',
+    },
+  },
+  againOther: (name) => `Try again as the ${name.toLowerCase()}`,
   start: 'Start interview',
   connecting: 'Connecting…',
   listening: 'Listening',

@@ -214,3 +214,63 @@
   opacity: 0.7;
   overflow-wrap: anywhere;
 }
+
+/* Portrayal choice, drawn in the same lines as the door note */
+.acts {
+  border: 0;
+  padding: 0;
+  margin: 0 0 32px;
+  display: grid;
+  gap: 8px;
+}
+.acts legend {
+  padding: 0;
+  margin-bottom: 10px;
+}
+.act {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  row-gap: 4px;
+  border: 1px solid var(--line-soft);
+  padding: 14px 16px;
+  cursor: pointer;
+}
+.act--on {
+  border-color: var(--fg);
+}
+.act input {
+  grid-row: 1 / span 2;
+  align-self: start;
+  margin: 4px 0 0;
+  accent-color: var(--fg);
+}
+.act-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+.act-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--fg-soft);
+}
+.call-act {
+  font-size: 13px;
+  color: var(--fg-soft);
+}
+.demo-again {
+  display: grid;
+  gap: 8px;
+}
+.demo-again .btn {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 15px;
+}
+
+.demo-engine {
+  margin: -0.6rem 0 1.2rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  opacity: 0.55;
+}

@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { startDemoSession } from './live';
+import { startDemoSession } from './session';
 import { MINUTES, TEXT } from './content';
 
 // The language is read from the query string at load time: ?lang=en|ko (default en).
 const LANG = new URLSearchParams(window.location.search).get('lang') === 'ko' ? 'ko' : 'en';
+// Two ways to play the same patient; ?portrayal=teaching preselects the second.
+const PORTRAYALS = ['assessment', 'teaching'];
+const PORTRAYAL0 = PORTRAYALS.includes(new URLSearchParams(window.location.search).get('portrayal'))
+  ? new URLSearchParams(window.location.search).get('portrayal')
+  : 'assessment';
 
 const fmt = (ms) => {
   const s = Math.max(0, Math.ceil(ms / 1000));
@@ -19,6 +24,7 @@ export default function DemoApp() {
   const [dropped, setDropped] = useState(null); // close reason when the connection ended mid-interview
   const [speaking, setSpeaking] = useState(null);
   const [turns, setTurns] = useState([]);
+  const [portrayal, setPortrayal] = useState(PORTRAYAL0);
   const [left, setLeft] = useState(MINUTES * 60 * 1000);
   const ctrl = useRef(null);
   const seq = useRef(0); // start() attempt counter, so a session that resolves after End is stopped
@@ -58,8 +64,16 @@ export default function DemoApp() {
     });
   };
 
-  async function start() {
+  // A cut-off question was joined to its continuation: rewrite the last student entry.
+  const replaceLastUser = (text) =>
+    setTurns((xs) => {
+      const i = xs.map((x) => x.who).lastIndexOf('user');
+      return i < 0 ? [...xs, { who: 'user', text, at: Date.now() }] : xs.map((x, j) => (j === i ? { ...x, text } : x));
+    });
+
+  async function start(chosen = portrayal) {
     const my = ++seq.current;
+    setPortrayal(chosen);
     setError(null);
     setErrorDetail(null);
     setDropped(null);
@@ -69,6 +83,7 @@ export default function DemoApp() {
     setPhase('call');
     const session = await startDemoSession({
       lang: LANG,
+      portrayal: chosen,
       onStatus: (st, code, detail) => {
         if (my !== seq.current) return;
         setStatus(st);
@@ -90,7 +105,7 @@ export default function DemoApp() {
           }
         }
       },
-      onUserText: (x, at) => push('user', x, at),
+      onUserText: (x, at, { replace } = {}) => (replace ? replaceLastUser(x) : push('user', x, at)),
       onAssistantText: (x, at) => push('patient', x, at),
       onSpeaking: setSpeaking,
     });
@@ -120,6 +135,17 @@ export default function DemoApp() {
           <h1 className="demo-title">{t.title}</h1>
           <p className="demo-lede">{t.lede}</p>
 
+          <fieldset className="acts">
+            <legend className="label">{t.portrayalLabel}</legend>
+            {PORTRAYALS.map((p) => (
+              <label key={p} className={`act ${portrayal === p ? 'act--on' : ''}`}>
+                <input type="radio" name="portrayal" value={p} checked={portrayal === p} onChange={() => setPortrayal(p)} />
+                <span className="act-name">{t.portrayals[p].name}</span>
+                <span className="act-desc">{t.portrayals[p].desc}</span>
+              </label>
+            ))}
+          </fieldset>
+
           <section className="door">
             <div className="label">{t.doorLabel}</div>
             {t.door.map((line) => (
@@ -134,7 +160,7 @@ export default function DemoApp() {
             </p>
           )}
 
-          <button className="btn btn--solid demo-start" onClick={start}>
+          <button className="btn btn--solid demo-start" onClick={() => start()}>
             {t.start}
           </button>
 
@@ -157,6 +183,7 @@ export default function DemoApp() {
                   : t.listening
                 : t.connecting}
             </span>
+            <span className="call-act">{t.portrayals[portrayal].name}</span>
             <span className={`call-timer ${left < 60000 ? 'low' : ''}`}>{fmt(left)}</span>
           </div>
 
@@ -179,6 +206,7 @@ export default function DemoApp() {
       {phase === 'done' && (
         <main className="demo-main">
           <h2>{t.doneTitle}</h2>
+          <p className="demo-engine">{t.portrayals[portrayal].name}</p>
           {dropped && (
             <p className="demo-error">
               {t.errors.network}
@@ -208,9 +236,14 @@ export default function DemoApp() {
             </details>
           )}
 
-          <button className="btn btn--solid demo-start" onClick={() => setPhase('intro')}>
-            {t.again}
-          </button>
+          <div className="demo-again">
+            <button className="btn btn--solid" onClick={() => start(portrayal === 'assessment' ? 'teaching' : 'assessment')}>
+              {t.againOther(t.portrayals[portrayal === 'assessment' ? 'teaching' : 'assessment'].name)}
+            </button>
+            <button className="btn" onClick={() => setPhase('intro')}>
+              {t.again}
+            </button>
+          </div>
         </main>
       )}
 
