@@ -218,7 +218,7 @@ export default function DemoApp() {
   return (
     <div className="demo">
       <header className="demo-bar">
-        <span className="brand">VOICE&nbsp;SP</span>
+        <span className="brand">SP&nbsp;TALK</span>
         <span className="demo-tag">{t.tag}</span>
       </header>
 

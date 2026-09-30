@@ -1,6 +1,6 @@
-# Voice Standardized Patient
+# SP Talk
 
-Voice Standardized Patient is a browser-based voice agent that plays a standardized patient, so that medical students can practise clinical history taking by speaking with it.
+SP Talk is a browser-based voice agent that plays a standardized patient, so that medical students can practise clinical history taking by speaking with it.
 
 [**Live Demo**](https://sptalk-demo.web.app) (No account or API key needed. Add `?lang=ko` for Korean.)
 

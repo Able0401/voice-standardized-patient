@@ -63,5 +63,5 @@ export const TEXT = {
     connect: 'Unable to reach the patient. Please try again shortly.',
     default: 'Unable to connect. Please try again shortly.',
   },
-  footer: 'Hyun Seung Moon · Voice Standardized Patient',
+  footer: 'Hyun Seung Moon · SP Talk',
 };
