@@ -88,23 +88,13 @@
   line-height: 1.7;
 }
 
-/* Interview screen */
-.demo-call {
-  display: flex;
-  flex-direction: column;
-  max-height: calc(100vh - 110px);
-  padding-top: 32px;
-}
+/* Interview screen: two panels side by side, one switched on at a time */
 .call-head {
   display: flex;
   align-items: center;
   gap: 10px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--line-soft);
-}
-.call-status {
-  font-size: 14px;
-  margin-right: auto;
 }
 .call-timer {
   font-variant-numeric: tabular-nums;
@@ -155,10 +145,6 @@
 .turn--user {
   color: var(--fg-soft);
 }
-.demo-end {
-  width: 100%;
-}
-
 /* After the interview */
 .check {
   list-style: none;
@@ -182,13 +168,6 @@
   accent-color: var(--fg);
   flex: none;
   transform: translateY(1px);
-}
-.demo-transcript {
-  margin-bottom: 28px;
-}
-.demo-transcript summary {
-  cursor: pointer;
-  padding: 8px 0 16px;
 }
 
 .demo-foot {
@@ -215,58 +194,6 @@
   overflow-wrap: anywhere;
 }
 
-/* Portrayal choice, drawn in the same lines as the door note */
-.acts {
-  border: 0;
-  padding: 0;
-  margin: 0 0 32px;
-  display: grid;
-  gap: 8px;
-}
-.acts legend {
-  padding: 0;
-  margin-bottom: 10px;
-}
-.act {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 12px;
-  row-gap: 4px;
-  border: 1px solid var(--line-soft);
-  padding: 14px 16px;
-  cursor: pointer;
-}
-.act--on {
-  border-color: var(--fg);
-}
-.act input {
-  grid-row: 1 / span 2;
-  align-self: start;
-  margin: 4px 0 0;
-  accent-color: var(--fg);
-}
-.act-name {
-  font-size: 15px;
-  font-weight: 600;
-}
-.act-desc {
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--fg-soft);
-}
-.call-act {
-  font-size: 13px;
-  color: var(--fg-soft);
-}
-.demo-again {
-  display: grid;
-  gap: 8px;
-}
-.demo-again .btn {
-  width: 100%;
-  padding: 14px 18px;
-  font-size: 15px;
-}
 
 .demo-engine {
   margin: -0.6rem 0 1.2rem;
@@ -283,4 +210,89 @@
   margin: -16px 0 32px;
   padding-left: 12px;
   border-left: 2px solid var(--line-soft);
+}
+
+.demo-order {
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+/* Two-panel interview area below the description */
+.demo-intro {
+  padding-bottom: 24px;
+}
+.demo-duo {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+  border-top: 1px solid var(--line-soft);
+  scroll-margin-top: 16px;
+}
+.demo-duo .demo-order {
+  max-width: 640px;
+  margin: 0 0 20px;
+}
+.duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  padding: 16px 18px 18px;
+}
+.pane--on {
+  border-color: var(--fg);
+}
+.pane--off {
+  opacity: 0.45;
+}
+.pane-name {
+  font-size: 15px;
+  font-weight: 600;
+  margin-right: auto;
+}
+.pane-status {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--fg-soft);
+}
+.pane .log {
+  height: 50vh;
+  min-height: 240px;
+  flex: none;
+}
+.pane-actions {
+  display: grid;
+  gap: 8px;
+}
+.pane-btn {
+  width: 100%;
+}
+.duo-done {
+  max-width: 640px;
+  margin: 48px auto 0;
+}
+
+/* Phones: stack the panels and put the active one on top */
+@media (max-width: 760px) {
+  .duo {
+    grid-template-columns: 1fr;
+  }
+  .pane--on {
+    order: -1;
+  }
+  .pane .log {
+    height: 45vh;
+  }
+  .pane--off .log {
+    display: none;
+  }
+  .demo-duo {
+    padding: 24px 16px 32px;
+  }
 }

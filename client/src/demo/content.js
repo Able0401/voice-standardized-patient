@@ -1,8 +1,8 @@
 // Screen text (English). The patient is a fictional case written for this demo; the same person is
 // defined in functions/demoCase.js. The patient's instructions and the portrayal texts are not here;
-// only the server has them. This file names the two portrayals and describes each in a sentence.
+// only the server has them. This file only names the two portrayals.
 
-export const MINUTES = 8;
+export const MINUTES = 5;
 
 export const TEXT = {
   tag: 'Demo',
@@ -14,19 +14,23 @@ export const TEXT = {
   door: [
     'Jieun Kim, 31, female, presents with trouble sleeping.',
     'Vitals: BP 118/74 mmHg · HR 88/min · RR 16/min · Temp 36.6 °C',
-    `Take a history, then explain your likely diagnosis and next steps to the patient. (${MINUTES} min)`,
+    `Take a history, then explain your likely diagnosis and next steps to the patient. (${MINUTES} min per patient)`,
   ],
   notes: [
     'Microphone access is required. Earphones improve recognition by keeping the patient’s voice out of the microphone.',
     'Conversations are not stored. Audio is processed by the Google Gemini API.',
     'Limited to 10 interviews per day.',
   ],
-  portrayalLabel: 'Patient type',
+  order: 'Start with the assessment standardized patient on the left. When that interview ends, the teaching patient on the right becomes available.',
   portrayals: {
     assessment: { name: 'Assessment standardized patient' },
     teaching: { name: 'Teaching patient' },
   },
-  againOther: (name) => `Try the ${name.toLowerCase()}`,
+  waiting: 'Available after the first interview ends.',
+  readyFirst: 'Press Start interview when you are ready, and allow microphone access when the browser asks.',
+  ready: 'Now interview the same patient again. This time she is portrayed as the teaching patient.',
+  skip: 'Finish without this interview',
+  ended: 'Interview ended',
   start: 'Start interview',
   connecting: 'Connecting…',
   listening: 'Listening',
@@ -50,7 +54,6 @@ export const TEXT = {
     'Family history',
     'What she wants and fears (sleeping pills, “Is this an illness?”)',
   ],
-  transcript: 'Transcript',
   again: 'Return to start',
   errors: {
     mic: 'Microphone unavailable. Allow access from the icon at the left of the address bar.',
