@@ -13,9 +13,10 @@ export const STT_MODEL_DEFAULT = 'gemini-3.5-transcribe-live';
 // The expressive model. gemini-3.8-flash-lite-tts starts about 0.4 s sooner.
 export const TTS_MODEL_DEFAULT = 'gemini-3.8-flash-tts';
 export const BRAIN_MODEL_DEFAULT = 'gemini-3.8-flash';
-// Silence that ends the student's turn. A question cut off by a longer pause is joined to the next
-// fragment by the client, as long as the patient has not started speaking.
-export const STT_SILENCE_MS = 1200;
+// Silence that ends the student's turn (1200 -> 600 ms, 2026-10-02: the listening state lingered too long
+// after the student stopped). A question cut off by a longer pause is joined to the next fragment by the
+// client, as long as the patient has not started speaking.
+export const STT_SILENCE_MS = 600;
 
 // Vocal tags from the guide's recommended list that fit a clinic interview. Whispering is a style, not a tag.
 export const DELIVERY_TAGS = [
@@ -59,7 +60,8 @@ const TURN_RULES_KO = `당신은 위 지시문대로 연기하는 환자다. 학
 - 매 발화마다 쓴다. 이 인물의 평소 말투(위 표현 지침)를 지금 이 순간의 기분으로 읽어, 음성 모델이 연기할 수 있게 영어 한 문장으로 적는다. 감정 상태와 빠르기·크기를 담고, 숨이 거칠거나 목소리가 떨리면 그것도 쓴다.
 - 형용사 나열보다 어떻게 들리는지 그린 한 문장이 낫다. 예: "Tired and flat, speaking slowly with little energy." "Guarded; a quiet, even voice, keeping the words short." "Voice tightens and trembles a little as the topic gets closer." "Mild irritation under polite words, a touch faster than usual."
 - 한 문장, 25단어 안. 지시를 여러 개 붙이지 않는다. 과하게 정하면 연기가 나빠진다.
-- 같은 기분이 다음 발화에도 이어지면 같은 문자열을 그대로 다시 쓴다. 기분이 움직였을 때만 바꾼다.
+- 한 사람의 한 면담이다. 빠르기·크기·톤의 기본값은 표현 지침이 정한 것이고 발화마다 바꾸지 않는다. 턴마다 움직이는 것은 감정의 농도와 망설임이다. 대화 기록의 환자 줄에 괄호로 적힌 것이 바로 앞 발화들의 style 이다. 거기서 이어 간다.
+- 같은 기분이 다음 발화에도 이어지면 같은 문자열을 그대로 다시 쓴다. 기분이 움직였을 때만, 그것도 한 번에 한 걸음만 바꾼다.
 - 나이·성별·이름·사투리·인물 설명, "목소리를 유지하라" 같은 지시는 쓰지 않는다. 무엇을 말할지도 쓰지 않는다.
 - 한 발화 안에서 말투가 확 바뀌어야 하면 거기서 발화를 끝낸다.
 
@@ -85,7 +87,8 @@ A speech model reads this utterance aloud. text carries what is said, style carr
 - Write it on every turn. Read the character's usual delivery (the expression guidance above) through this moment's mood and put it in one English sentence the speech model can act: emotional state, pace and volume, plus breath or a trembling voice when present.
 - One sentence that describes how it sounds beats a list of adjectives. Examples: "Tired and flat, speaking slowly with little energy." "Guarded; a quiet, even voice, keeping the words short." "Voice tightens and trembles a little as the topic gets closer." "Mild irritation under polite words, a touch faster than usual."
 - One sentence, under 25 words. Do not stack directions; over-specifying makes the performance worse.
-- If the same mood continues into the next utterance, repeat the exact same string. Change it only when the mood moves.
+- One person, one interview. Pace, volume and tone default to what the expression guidance says and do not change from utterance to utterance. What moves between turns is the intensity of the emotion and the hesitation. The parenthesis on each Patient line in the conversation is the style of that earlier utterance; continue from it.
+- If the same mood continues into the next utterance, repeat the exact same string. Change it only when the mood moves, and then by one step at a time.
 - Never put age, gender, name, accent, character description, or instructions like "keep the same voice" in style. Never put the content in style.
 - If the delivery must change sharply mid-utterance, end the utterance there.
 
@@ -99,9 +102,14 @@ A speech model reads this utterance aloud. text carries what is said, style carr
  */
 export async function patientTurn({ apiKey, model, instructions, history = [], notes = '', lang = 'ko' }) {
   const ai = new GoogleGenAI({ apiKey });
+  // Each Patient line carries its own style in parentheses, so the model sees how it spoke last time and continues from it.
   const transcript = history
     .slice(-20)
-    .map((m) => `${m.role === 'user' ? (lang === 'en' ? 'Student' : '학생') : lang === 'en' ? 'Patient' : '환자'}: ${m.text}`)
+    .map((m) => {
+      const who = m.role === 'user' ? (lang === 'en' ? 'Student' : '학생') : lang === 'en' ? 'Patient' : '환자';
+      const st = m.role !== 'user' && typeof m.style === 'string' ? m.style.trim().slice(0, 200) : '';
+      return `${who}${st ? ` (${st})` : ''}: ${m.text}`;
+    })
     .join('\n');
   const res = await ai.models.generateContent({
     model,

@@ -88,7 +88,8 @@ export async function startDemoSession({
         heard = true;
         pendingUser = null;
         const spoken = stripTags(turn.text);
-        history.push({ role: 'assistant', text: spoken });
+        // The style travels with the line so the model can carry its own delivery into the next turn.
+        history.push({ role: 'assistant', text: spoken, style: turn.style || '' });
         onAssistantText(spoken, Date.now());
       }
       player.push(value);
