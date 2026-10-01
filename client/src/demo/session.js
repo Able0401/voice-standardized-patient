@@ -89,7 +89,7 @@ export async function startDemoSession({
         pendingUser = null;
         const spoken = stripTags(turn.text);
         // The style travels with the line so the model can carry its own delivery into the next turn.
-        history.push({ role: 'assistant', text: spoken, style: turn.style || '' });
+        history.push({ role: 'assistant', text: spoken, style: turn.style || '', ...(turn.moment ? { moment: turn.moment } : {}) });
         onAssistantText(spoken, Date.now());
       }
       player.push(value);

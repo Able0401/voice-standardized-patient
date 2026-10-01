@@ -38,6 +38,10 @@ const TURN_SCHEMA = {
       type: 'string',
       description: 'How this whole utterance is delivered: one English sentence on emotional state, pace and volume. Written on every turn.',
     },
+    moment: {
+      type: 'string',
+      description: 'Id of the scripted moment this utterance performs, copied exactly from the portrayal block (for example "S2"). Empty string on every other turn.',
+    },
   },
   required: ['text', 'style'],
 };
@@ -64,6 +68,11 @@ const TURN_RULES_KO = `당신은 위 지시문대로 연기하는 환자다. 학
 - 같은 기분이 다음 발화에도 이어지면 같은 문자열을 그대로 다시 쓴다. 기분이 움직였을 때만, 그것도 한 번에 한 걸음만 바꾼다.
 - 나이·성별·이름·사투리·인물 설명, "목소리를 유지하라" 같은 지시는 쓰지 않는다. 무엇을 말할지도 쓰지 않는다.
 - 한 발화 안에서 말투가 확 바뀌어야 하면 거기서 발화를 끝낸다.
+
+[moment — 장면 보고]
+- 위 지시문의 연기 방식 블록에 미리 정해 둔 장면 표가 있고, 이번 발화가 그 표의 한 줄에 적힌 반응을 연기한 것이면 그 줄의 id 를 그대로 적는다(예: "S2").
+- 대화 기록의 환자 줄에 대괄호로 적힌 id 는 그 발화에서 이미 연기한 장면이다. 이미 한 장면은 다시 하지 않고, 장면 수의 상한은 연기 방식 블록이 정한 대로 센다.
+- 그 밖의 발화는 빈 문자열이다. 표가 없으면 항상 빈 문자열이다. 장면을 연기한 발화의 style 과 태그는 그 줄의 반응이 정한 만큼 움직인다.
 
 [내용]
 - 메모에 없는 임상 사실은 지어내지 않는다. 메모가 비어 있으면 사실을 말하지 않고 짧게 반응만 한다.
@@ -92,12 +101,17 @@ A speech model reads this utterance aloud. text carries what is said, style carr
 - Never put age, gender, name, accent, character description, or instructions like "keep the same voice" in style. Never put the content in style.
 - If the delivery must change sharply mid-utterance, end the utterance there.
 
+[moment — reporting a scripted moment]
+- If the portrayal block above carries a table of scripted moments and this utterance performs the reaction written on one of its rows, copy that row's id exactly (for example "S2").
+- An id in square brackets on a Patient line in the conversation marks a moment already performed there. Do not perform it again, and count toward whatever limit on moments the portrayal block sets.
+- On every other utterance it is an empty string. With no table it is always empty. On an utterance that performs a moment, style and tags move as far as that row's reaction says.
+
 [content]
 - Never invent clinical facts that are not in the notes. If the notes are empty, react briefly without stating facts.
 - Speak English.`;
 
 /**
- * The patient's next utterance. { text, style }
+ * The patient's next utterance. { text, style, moment }
  * @param {{apiKey:string, model:string, instructions:string, history:Array<{role:string,text:string}>, notes:string, lang:'ko'|'en'}} o
  */
 export async function patientTurn({ apiKey, model, instructions, history = [], notes = '', lang = 'ko' }) {
@@ -108,7 +122,9 @@ export async function patientTurn({ apiKey, model, instructions, history = [], n
     .map((m) => {
       const who = m.role === 'user' ? (lang === 'en' ? 'Student' : '학생') : lang === 'en' ? 'Patient' : '환자';
       const st = m.role !== 'user' && typeof m.style === 'string' ? m.style.trim().slice(0, 200) : '';
-      return `${who}${st ? ` (${st})` : ''}: ${m.text}`;
+      // A moment already performed is marked on its line so the model does not repeat it and can count them
+      const mo = m.role !== 'user' && typeof m.moment === 'string' ? m.moment.trim().slice(0, 20) : '';
+      return `${who}${st ? ` (${st})` : ''}${mo ? ` [${mo}]` : ''}: ${m.text}`;
     })
     .join('\n');
   const res = await ai.models.generateContent({
@@ -144,7 +160,7 @@ export async function patientTurn({ apiKey, model, instructions, history = [], n
   } catch {
     out = { text: (res.text || '').trim(), style: '' };
   }
-  return { text: String(out.text || '').trim(), style: String(out.style || '').trim() };
+  return { text: String(out.text || '').trim(), style: String(out.style || '').trim(), moment: String(out.moment || '').trim().slice(0, 20) };
 }
 
 // Cleaned only right before synthesis. Tags outside the list may be read out as words, and |...| is
