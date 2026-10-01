@@ -5,6 +5,7 @@
 // Acting direction follows the Gemini 3.8 TTS guide (ai.google.dev/gemini-api/docs/speech-generation,
 // "Prompting guide", 2026-09-24): the text is a verbatim transcript, delivery for the whole utterance
 // goes in speech_metadata.style, and momentary sounds are inline angle-bracket tags.
+// style is one sentence on every turn (2026-10-01); before, it was written only when the delivery left the baseline.
 
 import { GoogleGenAI } from '@google/genai';
 
@@ -34,7 +35,7 @@ const TURN_SCHEMA = {
     },
     style: {
       type: 'string',
-      description: 'Delivery of this whole utterance in a few English words (e.g. "tired, speaking slowly"). Empty string on most turns.',
+      description: 'How this whole utterance is delivered: one English sentence on emotional state, pace and volume. Written on every turn.',
     },
   },
   required: ['text', 'style'],
@@ -55,9 +56,10 @@ const TURN_RULES_KO = `당신은 위 지시문대로 연기하는 환자다. 학
 - 세로 막대(|)는 쓰지 않는다.
 
 [style — 이 발화 전체의 말투]
-- 기본은 빈 문자열이다. 목소리는 이미 이 인물의 것이고, 대사와 문장부호만으로도 대부분 자연스럽게 읽힌다.
-- 이번 발화의 감정·빠르기·크기가 이 인물의 평소 말투에서 벗어날 때만 영어 몇 단어로 쓴다. 예: "tired, speaking slowly", "quiet and hesitant", "curt, irritated", "voice trembling", "whispering".
-- 같은 기분이 다음 발화에도 이어지면 같은 문자열을 그대로 다시 쓴다.
+- 매 발화마다 쓴다. 이 인물의 평소 말투(위 표현 지침)를 지금 이 순간의 기분으로 읽어, 음성 모델이 연기할 수 있게 영어 한 문장으로 적는다. 감정 상태와 빠르기·크기를 담고, 숨이 거칠거나 목소리가 떨리면 그것도 쓴다.
+- 형용사 나열보다 어떻게 들리는지 그린 한 문장이 낫다. 예: "Tired and flat, speaking slowly with little energy." "Guarded; a quiet, even voice, keeping the words short." "Voice tightens and trembles a little as the topic gets closer." "Mild irritation under polite words, a touch faster than usual."
+- 한 문장, 25단어 안. 지시를 여러 개 붙이지 않는다. 과하게 정하면 연기가 나빠진다.
+- 같은 기분이 다음 발화에도 이어지면 같은 문자열을 그대로 다시 쓴다. 기분이 움직였을 때만 바꾼다.
 - 나이·성별·이름·사투리·인물 설명, "목소리를 유지하라" 같은 지시는 쓰지 않는다. 무엇을 말할지도 쓰지 않는다.
 - 한 발화 안에서 말투가 확 바뀌어야 하면 거기서 발화를 끝낸다.
 
@@ -80,9 +82,10 @@ A speech model reads this utterance aloud. text carries what is said, style carr
 - Never use the pipe character (|).
 
 [style — delivery of the whole utterance]
-- Default is the empty string. The voice already belongs to this character, and the words and punctuation carry most of the delivery.
-- Write a few words only when this utterance departs from the character's usual delivery in emotion, pace or volume. Examples: "tired, speaking slowly", "quiet and hesitant", "curt, irritated", "voice trembling", "whispering".
-- If the same mood continues into the next utterance, repeat the exact same string.
+- Write it on every turn. Read the character's usual delivery (the expression guidance above) through this moment's mood and put it in one English sentence the speech model can act: emotional state, pace and volume, plus breath or a trembling voice when present.
+- One sentence that describes how it sounds beats a list of adjectives. Examples: "Tired and flat, speaking slowly with little energy." "Guarded; a quiet, even voice, keeping the words short." "Voice tightens and trembles a little as the topic gets closer." "Mild irritation under polite words, a touch faster than usual."
+- One sentence, under 25 words. Do not stack directions; over-specifying makes the performance worse.
+- If the same mood continues into the next utterance, repeat the exact same string. Change it only when the mood moves.
 - Never put age, gender, name, accent, character description, or instructions like "keep the same voice" in style. Never put the content in style.
 - If the delivery must change sharply mid-utterance, end the utterance there.
 
