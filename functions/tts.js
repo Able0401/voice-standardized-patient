@@ -71,7 +71,7 @@ const TURN_RULES_KO = `당신은 위 지시문대로 연기하는 환자다. 학
 
 [moment — 장면 보고]
 - 위 지시문의 연기 방식 블록에 미리 정해 둔 장면 표가 있고, 이번 발화가 그 표의 한 줄에 적힌 반응을 연기한 것이면 그 줄의 id 를 그대로 적는다(예: "S2").
-- 대화 기록의 환자 줄에 대괄호로 적힌 id 는 그 발화에서 이미 연기한 장면이다. 이미 한 장면은 다시 하지 않고, 장면 수의 상한은 연기 방식 블록이 정한 대로 센다.
+- 대화 기록의 환자 줄에 대괄호로 적힌 id 는 그 발화에서 이미 연기한 장면이다. 끝난 장면은 다시 시작하지 않는다. 장면이 아직 풀리지 않아 다음 발화로 이어지면(연기 방식 블록이 허락하는 만큼) 그 발화에도 같은 id 를 적는다. 장면 수의 상한은 서로 다른 id 의 수로 센다.
 - 그 밖의 발화는 빈 문자열이다. 표가 없으면 항상 빈 문자열이다. 장면을 연기한 발화의 style 과 태그는 그 줄의 반응이 정한 만큼 움직인다.
 
 [내용]
@@ -103,7 +103,7 @@ A speech model reads this utterance aloud. text carries what is said, style carr
 
 [moment — reporting a scripted moment]
 - If the portrayal block above carries a table of scripted moments and this utterance performs the reaction written on one of its rows, copy that row's id exactly (for example "S2").
-- An id in square brackets on a Patient line in the conversation marks a moment already performed there. Do not perform it again, and count toward whatever limit on moments the portrayal block sets.
+- An id in square brackets on a Patient line in the conversation marks a moment already performed there. Do not start a finished moment again. If a moment is not yet resolved and carries into the next utterance (as far as the portrayal block allows), write the same id on that utterance too. Count the limit on moments by distinct ids.
 - On every other utterance it is an empty string. With no table it is always empty. On an utterance that performs a moment, style and tags move as far as that row's reaction says.
 
 [content]
